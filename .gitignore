@@ -1,0 +1,6 @@
+# 原图不上传（可能含 GPS 位置等 EXIF 信息），只发布 img/ 里压缩后的图片
+photos/*
+!photos/captions.json
+.claude/
+.DS_Store
+__pycache__/
