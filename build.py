@@ -300,8 +300,22 @@ def main():
         "window.PHOTOS = " + json.dumps(photos, ensure_ascii=False, indent=1) + ";\n",
         "utf-8",
     )
+    stamp_versions()
     print(f"完成：{len(photos)} 张照片 → photos.js（水印：{wm or '无'}）")
 
 
+def stamp_versions():
+    """给 index.html 里引用的 js/css 加上内容版本号，更新后浏览器不会继续用缓存的旧文件。"""
+    index = ROOT / "index.html"
+    html = index.read_text("utf-8")
+    for name in ("style.css", "config.js", "photos.js", "app.js"):
+        v = hashlib.md5((ROOT / name).read_bytes()).hexdigest()[:8]
+        html = re.sub(rf'"{re.escape(name)}(\?v=\w+)?"', f'"{name}?v={v}"', html)
+    index.write_text(html, "utf-8")
+
+
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] == ["--stamp"]:  # 只改了 config.js / app.js / style.css 时，用这个刷新版本号，不用重新导入照片
+        stamp_versions()
+    else:
+        main()
