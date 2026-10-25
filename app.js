@@ -133,28 +133,10 @@
     const p = state.list[i];
     const c = catByKey[p.category];
     const img = $("lb-img");
+    releaseOriginal();
     img.src = p.src;
     img.alt = p.title || "";
-    const ex = p.exif || {};
-    const rows = [
-      ["相机", ex.camera], ["镜头", ex.lens], ["焦距", ex.focal],
-      ["光圈", ex.aperture], ["快门", ex.shutter], ["ISO", ex.iso],
-    ].filter((r) => r[1]);
-    $("lb-info").innerHTML = `
-      <div class="cat">${c ? `${c.zh} · ${c.en}` : ""}</div>
-      <h3>${esc(p.title || "未命名")}</h3>
-      <p class="meta">${esc([p.location, fmtDate(p.t)].filter(Boolean).join(" · "))}</p>
-      ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ""}
-      ${rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : ""}
-      <div class="lb-actions">
-        <button id="lb-copy">复制链接</button>
-        ${navigator.share ? `<button id="lb-share">分享</button>` : ""}
-        <a href="${p.src}" target="_blank" rel="noopener">查看原图</a>
-      </div>
-      <div class="lb-pos">${i + 1} / ${state.list.length}</div>`;
-    $("lb-copy").onclick = () => copy(photoUrl(p));
-    const sh = $("lb-share");
-    if (sh) sh.onclick = () => navigator.share({ title: p.title, url: photoUrl(p) }).catch(() => {});
+    renderInfo();
     document.title = `${p.title || "照片"} · ${SITE.title}`;
     if (lb.hidden) {
       lb.hidden = false;
@@ -164,7 +146,120 @@
     [i - 1, i + 1].forEach((j) => { const q = state.list[j]; if (q) new Image().src = q.src; });
   }
 
+  function renderInfo(error = "") {
+    const p = state.list[state.open];
+    const c = catByKey[p.category];
+    const ex = vault.meta && vault.meta[p.id];
+    const rows = ex
+      ? [
+          ["相机", ex.camera], ["镜头", ex.lens], ["焦距", ex.focal],
+          ["光圈", ex.aperture], ["快门", ex.shutter], ["ISO", ex.iso],
+          ["原图尺寸", ex.w && `${ex.w} × ${ex.h}`],
+        ].filter((r) => r[1])
+      : [];
+    const locked = !vault.key
+      ? `<form class="lb-lock" id="lb-lock">
+          <label for="lb-pw">🔒 原图与拍摄参数需要密码</label>
+          <div><input id="lb-pw" type="password" autocomplete="current-password" placeholder="输入密码"><button>解锁</button></div>
+          <p class="err">${esc(error)}</p>
+        </form>`
+      : `${rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : `<p class="desc">这张照片没有拍摄参数</p>`}`;
+    $("lb-info").innerHTML = `
+      <div class="cat">${c ? `${c.zh} · ${c.en}` : ""}</div>
+      <h3>${esc(p.title || "未命名")}</h3>
+      <p class="meta">${esc([p.location, fmtDate(p.t)].filter(Boolean).join(" · "))}</p>
+      ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ""}
+      ${locked}
+      <div class="lb-actions">
+        <button id="lb-copy">复制链接</button>
+        ${navigator.share ? `<button id="lb-share">分享</button>` : ""}
+        ${vault.key ? `<button id="lb-orig">${vault.url ? "下载原图" : "查看原图"}</button>` : ""}
+      </div>
+      <div class="lb-pos">${state.open + 1} / ${state.list.length}</div>`;
+    $("lb-copy").onclick = () => copy(photoUrl(p));
+    const sh = $("lb-share");
+    if (sh) sh.onclick = () => navigator.share({ title: p.title, url: photoUrl(p) }).catch(() => {});
+    const form = $("lb-lock");
+    if (form) form.onsubmit = (e) => { e.preventDefault(); unlock($("lb-pw").value); };
+    const ob = $("lb-orig");
+    if (ob) ob.onclick = () => (vault.url ? downloadOriginal(p) : showOriginal(p));
+  }
+
+  // ---------- 加密的原图与拍摄参数 ----------
+  // build.py 用密码加密 secure/ 里的文件；浏览器里用同一密码派生密钥并解密，密码不会发送到任何地方
+  const vault = { key: null, meta: null, url: null };
+  const b64 = (s) => Uint8Array.from(atob(s), (ch) => ch.charCodeAt(0));
+  const fetchBuf = async (path) => {
+    const r = await fetch(path);
+    if (!r.ok) throw new Error(`无法读取 ${path}`);
+    return new Uint8Array(await r.arrayBuffer());
+  };
+  const decrypt = (key, buf) => crypto.subtle.decrypt({ name: "AES-GCM", iv: buf.slice(0, 12) }, key, buf.slice(12));
+
+  async function unlock(pw) {
+    if (!pw) return;
+    const btn = document.querySelector("#lb-lock button");
+    if (btn) { btn.disabled = true; btn.textContent = "解锁中…"; }
+    try {
+      if (!crypto.subtle) throw new Error("需要通过 https 打开网页才能解锁");
+      const info = await fetch("secure/key.json").then((r) => r.json());
+      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+      const key = await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: b64(info.salt), iterations: info.iterations, hash: "SHA-256" },
+        base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+      );
+      try {
+        await decrypt(key, b64(info.check));
+      } catch {
+        return renderInfo("密码不对，请重试");
+      }
+      vault.meta = JSON.parse(new TextDecoder().decode(await decrypt(key, await fetchBuf("secure/meta.bin"))));
+      vault.key = key;
+      renderInfo();
+      toast("已解锁，本页关闭前都有效");
+    } catch (err) {
+      renderInfo(err.message || "解锁失败");
+    }
+  }
+
+  async function showOriginal(p) {
+    const ob = $("lb-orig");
+    ob.disabled = true;
+    ob.textContent = "加载原图…";
+    try {
+      const data = await decrypt(vault.key, await fetchBuf(`secure/${p.id}.bin`));
+      if (state.list[state.open] !== p) return; // 加载期间翻到了别的照片
+      releaseOriginal();
+      vault.url = URL.createObjectURL(new Blob([data], { type: "image/jpeg" }));
+      $("lb-img").src = vault.url;
+      renderInfo();
+    } catch {
+      ob.disabled = false;
+      ob.textContent = "查看原图";
+      toast("原图加载失败");
+    }
+  }
+
+  function downloadOriginal(p) {
+    const a = document.createElement("a");
+    a.href = vault.url;
+    a.download = `${p.title || p.id}.jpg`;
+    a.click();
+  }
+
+  function releaseOriginal() {
+    if (vault.url) URL.revokeObjectURL(vault.url);
+    vault.url = null;
+  }
+
+  // 公开图片：禁用右键另存和拖拽（只能挡住普通访客）
+  document.addEventListener("contextmenu", (e) => {
+    if (e.target.tagName === "IMG" && !(vault.url && e.target.src === vault.url)) e.preventDefault();
+  });
+  document.addEventListener("dragstart", (e) => { if (e.target.tagName === "IMG") e.preventDefault(); });
+
   function closeLightbox() {
+    releaseOriginal();
     lb.hidden = true;
     document.body.style.overflow = "";
     state.open = -1;
@@ -184,6 +279,7 @@
   document.addEventListener("keydown", (e) => {
     if (lb.hidden) return;
     if (e.key === "Escape") leave();
+    if (e.target.tagName === "INPUT") return; // 输密码时左右键用于移动光标
     if (e.key === "ArrowLeft") step(-1);
     if (e.key === "ArrowRight") step(1);
   });

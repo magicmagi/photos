@@ -1,6 +1,6 @@
 // 站点设置：改这里就能换名字、简介、社交链接和分类
 window.SITE = {
-  name: "Your Name",
+  name: "Maggie T",
   title: "光影集 · Photography",
   tagline: "用镜头记录走过的地方、遇见的人和天空。",
   about:
