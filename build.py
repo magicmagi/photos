@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-扫描 photos/<分类>/ 下的照片，生成网页用的图片和 photos.js。
+扫描照片文件夹里各分类子文件夹的照片，生成网页用的图片和 photos.js。
 
 用法:
     pip install pillow cryptography
     python3 build.py              # 会提示输入“查看原图”的密码（输入时不显示）
 
-目录约定:
-    photos/places/xxx.jpg          子文件夹名 = config.js 里的分类 key
-    photos/captions.json           可选，给照片写标题/地点/描述（脚本会自动补全新照片的空条目）
+目录约定（照片文件夹位置见下方 PHOTOS_DIR，默认是桌面上的 GitHub_Portfolio）:
+    GitHub_Portfolio/Nature/xxx.jpeg      子文件夹名 = config.js 里的分类 key
+    GitHub_Portfolio/captions.json        可选，给照片写标题/地点/描述（脚本会自动补全新照片的空条目）
+    视频等非图片文件会被忽略
 
 生成内容:
     img/<id>.jpg, img/<id>_t.jpg   公开的展示图和缩略图：长边 1600 / 800，带水印，不含 EXIF
@@ -43,7 +44,8 @@ except ImportError:
     sys.exit("需要 cryptography：pip install cryptography")
 
 ROOT = Path(__file__).resolve().parent
-SRC = ROOT / "photos"
+PHOTOS_DIR = "~/Desktop/GitHub_Portfolio"  # 照片所在文件夹；也可以运行时传入：python3 build.py <文件夹>
+SRC = Path(sys.argv[1] if len(sys.argv) > 1 else PHOTOS_DIR).expanduser().resolve()
 OUT = ROOT / "img"
 SECURE = ROOT / "secure"
 CAPTIONS = SRC / "captions.json"
@@ -220,9 +222,14 @@ def setup_key():
     return aes, True
 
 
+def default_title(stem):
+    # 相机默认文件名（IMG_0740、DSC01118 等）不当作标题
+    return "" if re.match(r"^(IMG|DSC|DSCF|_DSC|PXL|DJI|GOPR|P\d)[_-]?\d+", stem, re.I) else stem
+
+
 def main():
     if not SRC.exists():
-        sys.exit("没找到 photos/ 文件夹。按分类建子文件夹放照片，例如 photos/nature/")
+        sys.exit(f"没找到照片文件夹 {SRC}。按分类建子文件夹放照片，例如 {SRC}/Nature/")
 
     aes, key_changed = setup_key()
     wm = watermark_text()
@@ -238,9 +245,11 @@ def main():
 
     for f in files:
         rel = f.relative_to(SRC).as_posix()
-        category = f.relative_to(SRC).parts[0] if len(f.relative_to(SRC).parts) > 1 else "places"
+        if len(f.relative_to(SRC).parts) < 2:
+            continue  # 不在分类子文件夹里的照片跳过
+        category = f.relative_to(SRC).parts[0]
         pid = hashlib.md5(rel.encode()).hexdigest()[:8]
-        cap = captions.setdefault(rel, {"title": f.stem, "location": "", "desc": ""})
+        cap = captions.setdefault(rel, {"title": default_title(f.stem), "location": "", "desc": ""})
         disp, thumb, orig = OUT / f"{pid}.jpg", OUT / f"{pid}_t.jpg", SECURE / f"{pid}.bin"
         src_mtime = f.stat().st_mtime
 
@@ -269,13 +278,13 @@ def main():
             "thumb": f"img/{pid}_t.jpg",
             "w": dw, "h": dh,
             "category": cap.get("category") or category,
-            "title": cap.get("title") or f.stem,
+            "title": cap.get("title", ""),
             "location": cap.get("location", ""),
             "desc": cap.get("desc", ""),
             "date": date.isoformat(timespec="minutes"),
         })
 
-    # 删掉已不在 photos/ 里的照片对应的生成文件
+    # 删掉已不在照片文件夹里的照片对应的生成文件
     keep = {p["id"] for p in photos}
     for d in (OUT, SECURE):
         for g in d.glob("*"):
@@ -287,7 +296,7 @@ def main():
     sig_file.write_text(sig)
     CAPTIONS.write_text(json.dumps(captions, ensure_ascii=False, indent=2), "utf-8")
     (ROOT / "photos.js").write_text(
-        "// 由 build.py 自动生成，请勿手动修改；标题等信息写在 photos/captions.json\n"
+        "// 由 build.py 自动生成，请勿手动修改；标题等信息写在照片文件夹的 captions.json\n"
         "window.PHOTOS = " + json.dumps(photos, ensure_ascii=False, indent=1) + ";\n",
         "utf-8",
     )

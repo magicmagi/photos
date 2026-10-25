@@ -10,12 +10,12 @@ window.SITE = {
     { label: "小红书", url: "https://www.xiaohongshu.com/" },
     { label: "Email", url: "mailto:you@example.com" },
   ],
-  // key 对应 photos/ 下的子文件夹名
+  // key 对应照片文件夹（桌面 GitHub_Portfolio）里的子文件夹名，大小写要一致
   categories: [
-    { key: "places", zh: "地点", en: "Places" },
-    { key: "architecture", zh: "建筑", en: "Architecture" },
-    { key: "nature", zh: "自然", en: "Nature" },
-    { key: "flight", zh: "飞行", en: "Flight" },
-    { key: "people", zh: "人文", en: "People & Culture" },
+    { key: "Architecture", zh: "建筑", en: "Architecture" },
+    { key: "Nature", zh: "自然", en: "Nature" },
+    { key: "Culture", zh: "人文", en: "Culture" },
+    { key: "InTheClouds", zh: "云端", en: "In the Clouds" },
+    { key: "Casablanca_BW", zh: "卡萨布兰卡 · 黑白", en: "Casablanca B&W" },
   ],
 };

@@ -166,7 +166,7 @@
       : `${rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : `<p class="desc">这张照片没有拍摄参数</p>`}`;
     $("lb-info").innerHTML = `
       <div class="cat">${c ? `${c.zh} · ${c.en}` : ""}</div>
-      <h3>${esc(p.title || "未命名")}</h3>
+      <h3>${esc(p.title || p.location || (c ? c.zh : "未命名"))}</h3>
       <p class="meta">${esc([p.location, fmtDate(p.t)].filter(Boolean).join(" · "))}</p>
       ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ""}
       ${locked}
