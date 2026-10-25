@@ -224,6 +224,8 @@ def setup_key():
 
 def default_title(stem):
     # 相机默认文件名（IMG_0740、DSC01118 等）不当作标题
+    if stem.startswith(".") or re.match(r"^[0-9A-F]{8}-[0-9A-F]{4}-", stem, re.I):  # 隐藏文件、随机 ID 文件名
+        return ""
     return "" if re.match(r"^(IMG|DSC|DSCF|_DSC|PXL|DJI|GOPR|P\d)[_-]?\d+", stem, re.I) else stem
 
 

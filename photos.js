@@ -349,42 +349,6 @@ window.PHOTOS = [
   "date": "2023-09-25T20:02"
  },
  {
-  "id": "adeaffb4",
-  "src": "img/adeaffb4.jpg",
-  "thumb": "img/adeaffb4_t.jpg",
-  "w": 1600,
-  "h": 1200,
-  "category": "Culture",
-  "title": "760A6E44-2D8A-46C6-8636-3FAF26257714",
-  "location": "",
-  "desc": "",
-  "date": "2022-06-21T20:14"
- },
- {
-  "id": "6b17f152",
-  "src": "img/6b17f152.jpg",
-  "thumb": "img/6b17f152_t.jpg",
-  "w": 1069,
-  "h": 1600,
-  "category": "Culture",
-  "title": "",
-  "location": "",
-  "desc": "",
-  "date": "2021-11-13T06:47"
- },
- {
-  "id": "26959bfe",
-  "src": "img/26959bfe.jpg",
-  "thumb": "img/26959bfe_t.jpg",
-  "w": 1600,
-  "h": 1069,
-  "category": "Culture",
-  "title": "",
-  "location": "",
-  "desc": "",
-  "date": "2022-01-22T19:43"
- },
- {
   "id": "d6a804f0",
   "src": "img/d6a804f0.jpg",
   "thumb": "img/d6a804f0_t.jpg",
@@ -635,18 +599,6 @@ window.PHOTOS = [
   "location": "",
   "desc": "",
   "date": "2024-12-23T16:55"
- },
- {
-  "id": "e5e6f68f",
-  "src": "img/e5e6f68f.jpg",
-  "thumb": "img/e5e6f68f_t.jpg",
-  "w": 1200,
-  "h": 1600,
-  "category": "Culture",
-  "title": "",
-  "location": "",
-  "desc": "",
-  "date": "2025-07-25T12:59"
  },
  {
   "id": "79748b3b",
@@ -967,7 +919,7 @@ window.PHOTOS = [
   "w": 1600,
   "h": 1600,
   "category": "Nature",
-  "title": ".albumtemp",
+  "title": "",
   "location": "",
   "desc": "",
   "date": "2020-03-04T18:33"
@@ -1019,18 +971,6 @@ window.PHOTOS = [
   "location": "",
   "desc": "",
   "date": "2023-12-09T10:31"
- },
- {
-  "id": "d78c93ec",
-  "src": "img/d78c93ec.jpg",
-  "thumb": "img/d78c93ec_t.jpg",
-  "w": 1600,
-  "h": 1200,
-  "category": "Nature",
-  "title": "",
-  "location": "",
-  "desc": "",
-  "date": "2023-12-09T10:51"
  },
  {
   "id": "ab151b87",
