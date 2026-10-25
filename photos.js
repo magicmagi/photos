@@ -913,18 +913,6 @@ window.PHOTOS = [
   "date": "2026-09-23T10:25"
  },
  {
-  "id": "86eec75e",
-  "src": "img/86eec75e.jpg",
-  "thumb": "img/86eec75e_t.jpg",
-  "w": 1600,
-  "h": 1600,
-  "category": "Nature",
-  "title": "",
-  "location": "",
-  "desc": "",
-  "date": "2020-03-04T18:33"
- },
- {
   "id": "6c2ec617",
   "src": "img/6c2ec617.jpg",
   "thumb": "img/6c2ec617_t.jpg",
