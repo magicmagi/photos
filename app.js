@@ -18,23 +18,76 @@
     open: -1,
   };
 
-  // ---------- header ----------
-  $("site-name").textContent = SITE.name;
-  $("site-title").textContent = SITE.title;
-  $("site-tagline").textContent = SITE.tagline;
-  $("site-about").textContent = SITE.about;
-  $("foot-name").textContent = `© ${new Date().getFullYear()} ${SITE.name}`;
-  $("foot-count").textContent = `${PHOTOS.length} 张照片`;
-  $("site-links").innerHTML = SITE.links
-    .map((l) => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`)
-    .join("");
+  // ---------- 语言 ----------
+  // 默认跟随访客的系统/浏览器语言：中文显示中文，其他语言显示英文；右上角按钮可手动切换
+  const TEXT = {
+    zh: {
+      all: "全部", newest: "最新优先", oldest: "最早优先", byYear: "按年份", flat: "平铺",
+      sortTip: "切换排序", viewTip: "切换视图", langTip: "Switch to English", langBtn: "EN",
+      about: "关于", photos: (n) => `${n} 张照片`, count: (n) => `${n} 张`,
+      empty: "这个分类还没有照片", unknownYear: "未知年份", photo: "照片", untitled: "未命名",
+      camera: "相机", lens: "镜头", focal: "焦距", aperture: "光圈", shutter: "快门", size: "原图尺寸",
+      locked: "🔒 原图与拍摄参数需要密码", pwPlaceholder: "输入密码", unlock: "解锁", unlocking: "解锁中…",
+      noExif: "这张照片没有拍摄参数", copyLink: "复制链接", share: "分享",
+      viewOrig: "查看原图", downloadOrig: "下载原图", loadingOrig: "加载原图…", origFailed: "原图加载失败",
+      cantRead: (p) => `无法读取 ${p}`, needHttps: "需要通过 https 打开网页才能解锁",
+      wrongPw: "密码不对，请重试", unlocked: "已解锁，本页关闭前都有效", unlockFailed: "解锁失败",
+      copied: "链接已复制", copyPrompt: "复制这个链接", close: "关闭", prev: "上一张", next: "下一张",
+    },
+    en: {
+      all: "All", newest: "Newest first", oldest: "Oldest first", byYear: "By year", flat: "Grid",
+      sortTip: "Change sort order", viewTip: "Change view", langTip: "切换到中文", langBtn: "中文",
+      about: "About", photos: (n) => `${n} photos`, count: (n) => `${n}`,
+      empty: "No photos in this category yet", unknownYear: "Undated", photo: "Photo", untitled: "Untitled",
+      camera: "Camera", lens: "Lens", focal: "Focal length", aperture: "Aperture", shutter: "Shutter", size: "Original size",
+      locked: "🔒 Password required for the original and shooting details", pwPlaceholder: "Password", unlock: "Unlock", unlocking: "Unlocking…",
+      noExif: "No shooting details for this photo", copyLink: "Copy link", share: "Share",
+      viewOrig: "View original", downloadOrig: "Download original", loadingOrig: "Loading original…", origFailed: "Couldn't load the original",
+      cantRead: (p) => `Couldn't read ${p}`, needHttps: "Open this page over https to unlock",
+      wrongPw: "Wrong password, try again", unlocked: "Unlocked until you close this page", unlockFailed: "Couldn't unlock",
+      copied: "Link copied", copyPrompt: "Copy this link", close: "Close", prev: "Previous", next: "Next",
+    },
+  };
+  const detectLang = () => {
+    const first = (navigator.languages && navigator.languages[0]) || navigator.language || "en";
+    return first.toLowerCase().startsWith("zh") ? "zh" : "en";
+  };
+  let lang = store.get("lang", "") in TEXT ? store.get("lang", "") : detectLang();
+  const T = (k, ...a) => (typeof TEXT[lang][k] === "function" ? TEXT[lang][k](...a) : TEXT[lang][k]);
+  // config.js 里的文字可以写成 "文字" 或 { zh: "中文", en: "English" }
+  const L = (v) => (v && typeof v === "object" ? v[lang] || v.zh || v.en || "" : v || "");
+  // 照片的标题/地点/描述：英文界面优先用 captions.json 里的 title_en / location_en / desc_en
+  const F = (p, k) => (lang === "en" && p[`${k}_en`]) || p[k] || "";
+  const catName = (c) => c[lang] || c.zh || c.en || c.key;
 
-  const fmtDate = (t, withDay = true) => {
+  // ---------- header ----------
+  function renderStatic() {
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    $("site-name").textContent = L(SITE.name);
+    $("site-title").textContent = L(SITE.title);
+    $("site-tagline").textContent = L(SITE.tagline);
+    $("site-about").textContent = L(SITE.about);
+    $("about-title").textContent = T("about");
+    $("foot-name").textContent = `© ${new Date().getFullYear()} ${L(SITE.name)}`;
+    $("foot-count").textContent = T("photos", PHOTOS.length);
+    $("site-links").innerHTML = SITE.links
+      .map((l) => `<a href="${l.url}" target="_blank" rel="noopener">${esc(L(l.label))}</a>`)
+      .join("");
+    $("sort-btn").title = T("sortTip");
+    $("view-btn").title = T("viewTip");
+    $("lang-btn").title = T("langTip");
+    $("lang-btn").textContent = T("langBtn");
+    $("lb-close").setAttribute("aria-label", T("close"));
+    $("lb-prev").setAttribute("aria-label", T("prev"));
+    $("lb-next").setAttribute("aria-label", T("next"));
+  }
+
+  const fmtDate = (t) => {
     if (!t) return "";
     const d = new Date(t);
-    return withDay
+    return lang === "zh"
       ? `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
-      : `${d.getFullYear()}年${d.getMonth() + 1}月`;
+      : d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   };
   const esc = (s = "") =>
     String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -43,11 +96,11 @@
   function renderChips() {
     const counts = {};
     PHOTOS.forEach((p) => (counts[p.category] = (counts[p.category] || 0) + 1));
-    const items = [{ key: "all", zh: "全部", n: PHOTOS.length }, ...CATS.map((c) => ({ ...c, n: counts[c.key] || 0 }))];
+    const items = [{ key: "all", zh: TEXT.zh.all, en: TEXT.en.all, n: PHOTOS.length }, ...CATS.map((c) => ({ ...c, n: counts[c.key] || 0 }))];
     $("chips").innerHTML = items
       .map(
         (c) =>
-          `<button class="chip" role="tab" data-cat="${c.key}" aria-selected="${state.cat === c.key}">${c.zh}<span class="n">${c.n}</span></button>`
+          `<button class="chip" role="tab" data-cat="${c.key}" aria-selected="${state.cat === c.key}">${esc(catName(c))}<span class="n">${c.n}</span></button>`
       )
       .join("");
   }
@@ -59,8 +112,8 @@
 
   // ---------- controls ----------
   function renderControls() {
-    $("sort-btn").innerHTML = state.sort === "new" ? "↓ <span class='lbl'>最新优先</span>" : "↑ <span class='lbl'>最早优先</span>";
-    $("view-btn").innerHTML = state.view === "timeline" ? "▤ <span class='lbl'>按年份</span>" : "▦ <span class='lbl'>平铺</span>";
+    $("sort-btn").innerHTML = state.sort === "new" ? `↓ <span class='lbl'>${T("newest")}</span>` : `↑ <span class='lbl'>${T("oldest")}</span>`;
+    $("view-btn").innerHTML = state.view === "timeline" ? `▤ <span class='lbl'>${T("byYear")}</span>` : `▦ <span class='lbl'>${T("flat")}</span>`;
   }
   $("sort-btn").onclick = () => {
     state.sort = state.sort === "new" ? "old" : "new";
@@ -72,14 +125,22 @@
     store.set("view", state.view);
     render();
   };
+  $("lang-btn").onclick = () => {
+    lang = lang === "zh" ? "en" : "zh";
+    store.set("lang", lang);
+    renderStatic();
+    render();
+    if (state.open >= 0) renderInfo();
+    setTitle();
+  };
 
   // ---------- gallery ----------
   function tile(p, i) {
     const r = (p.w / p.h).toFixed(4);
-    const cap = [p.location, fmtDate(p.t)].filter(Boolean).join(" · ");
+    const cap = [F(p, "location"), fmtDate(p.t)].filter(Boolean).join(" · ");
     return `<figure class="tile" tabindex="0" data-i="${i}" style="flex-grow:${r};width:calc(var(--row) * ${r});aspect-ratio:${p.w}/${p.h}">
-      <img src="${p.thumb || p.src}" alt="${esc(p.title)}" loading="lazy" onload="this.classList.add('loaded')">
-      <figcaption>${esc(p.title)}<small>${esc(cap)}</small></figcaption>
+      <img src="${p.thumb || p.src}" alt="${esc(F(p, "title"))}" loading="lazy" onload="this.classList.add('loaded')">
+      <figcaption>${esc(F(p, "title"))}<small>${esc(cap)}</small></figcaption>
     </figure>`;
   }
 
@@ -91,7 +152,7 @@
 
     const g = $("gallery");
     if (!state.list.length) {
-      g.innerHTML = `<p class="empty">这个分类还没有照片</p>`;
+      g.innerHTML = `<p class="empty">${T("empty")}</p>`;
       return;
     }
     if (state.view === "grid") {
@@ -99,16 +160,22 @@
     } else {
       const groups = [];
       state.list.forEach((p, i) => {
-        const y = p.t ? new Date(p.t).getFullYear() : "未知年份";
+        const y = p.t ? new Date(p.t).getFullYear() : T("unknownYear");
         if (!groups.length || groups.at(-1).y !== y) groups.push({ y, items: [] });
         groups.at(-1).items.push(tile(p, i));
       });
       g.innerHTML = groups
-        .map((gr) => `<div class="group-head"><h2>${gr.y}</h2><span>${gr.items.length} 张</span></div><div class="rows">${gr.items.join("")}</div>`)
+        .map((gr) => `<div class="group-head"><h2>${gr.y}</h2><span>${T("count", gr.items.length)}</span></div><div class="rows">${gr.items.join("")}</div>`)
         .join("");
     }
+    setTitle();
+  }
+
+  function setTitle() {
+    const site = L(SITE.title);
+    const p = state.open >= 0 && state.list[state.open];
     const c = catByKey[state.cat];
-    document.title = c ? `${c.zh} · ${SITE.title}` : SITE.title;
+    document.title = p ? `${F(p, "title") || T("photo")} · ${site}` : c ? `${catName(c)} · ${site}` : site;
   }
 
   $("gallery").addEventListener("click", (e) => {
@@ -135,9 +202,9 @@
     const img = $("lb-img");
     releaseOriginal();
     img.src = p.src;
-    img.alt = p.title || "";
+    img.alt = F(p, "title");
     renderInfo();
-    document.title = `${p.title || "照片"} · ${SITE.title}`;
+    setTitle();
     if (lb.hidden) {
       lb.hidden = false;
       document.body.style.overflow = "hidden";
@@ -152,33 +219,33 @@
     const ex = vault.meta && vault.meta[p.id];
     const rows = ex
       ? [
-          ["相机", ex.camera], ["镜头", ex.lens], ["焦距", ex.focal],
-          ["光圈", ex.aperture], ["快门", ex.shutter], ["ISO", ex.iso],
-          ["原图尺寸", ex.w && `${ex.w} × ${ex.h}`],
+          [T("camera"), ex.camera], [T("lens"), ex.lens], [T("focal"), ex.focal],
+          [T("aperture"), ex.aperture], [T("shutter"), ex.shutter], ["ISO", ex.iso],
+          [T("size"), ex.w && `${ex.w} × ${ex.h}`],
         ].filter((r) => r[1])
       : [];
     const locked = !vault.key
       ? `<form class="lb-lock" id="lb-lock">
-          <label for="lb-pw">🔒 原图与拍摄参数需要密码</label>
-          <div><input id="lb-pw" type="password" autocomplete="current-password" placeholder="输入密码"><button>解锁</button></div>
+          <label for="lb-pw">${T("locked")}</label>
+          <div><input id="lb-pw" type="password" autocomplete="current-password" placeholder="${T("pwPlaceholder")}"><button>${T("unlock")}</button></div>
           <p class="err">${esc(error)}</p>
         </form>`
-      : `${rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : `<p class="desc">这张照片没有拍摄参数</p>`}`;
+      : `${rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : `<p class="desc">${T("noExif")}</p>`}`;
     $("lb-info").innerHTML = `
-      <div class="cat">${c ? `${c.zh} · ${c.en}` : ""}</div>
-      <h3>${esc(p.title || p.location || (c ? c.zh : "未命名"))}</h3>
-      <p class="meta">${esc([p.location, fmtDate(p.t)].filter(Boolean).join(" · "))}</p>
-      ${p.desc ? `<p class="desc">${esc(p.desc)}</p>` : ""}
+      <div class="cat">${c ? esc(catName(c)) : ""}</div>
+      <h3>${esc(F(p, "title") || F(p, "location") || (c ? catName(c) : T("untitled")))}</h3>
+      <p class="meta">${esc([F(p, "location"), fmtDate(p.t)].filter(Boolean).join(" · "))}</p>
+      ${F(p, "desc") ? `<p class="desc">${esc(F(p, "desc"))}</p>` : ""}
       ${locked}
       <div class="lb-actions">
-        <button id="lb-copy">复制链接</button>
-        ${navigator.share ? `<button id="lb-share">分享</button>` : ""}
-        ${vault.key ? `<button id="lb-orig">${vault.url ? "下载原图" : "查看原图"}</button>` : ""}
+        <button id="lb-copy">${T("copyLink")}</button>
+        ${navigator.share ? `<button id="lb-share">${T("share")}</button>` : ""}
+        ${vault.key ? `<button id="lb-orig">${vault.url ? T("downloadOrig") : T("viewOrig")}</button>` : ""}
       </div>
       <div class="lb-pos">${state.open + 1} / ${state.list.length}</div>`;
     $("lb-copy").onclick = () => copy(photoUrl(p));
     const sh = $("lb-share");
-    if (sh) sh.onclick = () => navigator.share({ title: p.title, url: photoUrl(p) }).catch(() => {});
+    if (sh) sh.onclick = () => navigator.share({ title: F(p, "title"), url: photoUrl(p) }).catch(() => {});
     const form = $("lb-lock");
     if (form) form.onsubmit = (e) => { e.preventDefault(); unlock($("lb-pw").value); };
     const ob = $("lb-orig");
@@ -191,7 +258,7 @@
   const b64 = (s) => Uint8Array.from(atob(s), (ch) => ch.charCodeAt(0));
   const fetchBuf = async (path) => {
     const r = await fetch(path);
-    if (!r.ok) throw new Error(`无法读取 ${path}`);
+    if (!r.ok) throw new Error(T("cantRead", path));
     return new Uint8Array(await r.arrayBuffer());
   };
   const decrypt = (key, buf) => crypto.subtle.decrypt({ name: "AES-GCM", iv: buf.slice(0, 12) }, key, buf.slice(12));
@@ -199,9 +266,9 @@
   async function unlock(pw) {
     if (!pw) return;
     const btn = document.querySelector("#lb-lock button");
-    if (btn) { btn.disabled = true; btn.textContent = "解锁中…"; }
+    if (btn) { btn.disabled = true; btn.textContent = T("unlocking"); }
     try {
-      if (!crypto.subtle) throw new Error("需要通过 https 打开网页才能解锁");
+      if (!crypto.subtle) throw new Error(T("needHttps"));
       const info = await fetch("secure/key.json").then((r) => r.json());
       const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
       const key = await crypto.subtle.deriveKey(
@@ -211,21 +278,21 @@
       try {
         await decrypt(key, b64(info.check));
       } catch {
-        return renderInfo("密码不对，请重试");
+        return renderInfo(T("wrongPw"));
       }
       vault.meta = JSON.parse(new TextDecoder().decode(await decrypt(key, await fetchBuf("secure/meta.bin"))));
       vault.key = key;
       renderInfo();
-      toast("已解锁，本页关闭前都有效");
+      toast(T("unlocked"));
     } catch (err) {
-      renderInfo(err.message || "解锁失败");
+      renderInfo(err.message || T("unlockFailed"));
     }
   }
 
   async function showOriginal(p) {
     const ob = $("lb-orig");
     ob.disabled = true;
-    ob.textContent = "加载原图…";
+    ob.textContent = T("loadingOrig");
     try {
       const data = await decrypt(vault.key, await fetchBuf(`secure/${p.id}.bin`));
       if (state.list[state.open] !== p) return; // 加载期间翻到了别的照片
@@ -235,15 +302,15 @@
       renderInfo();
     } catch {
       ob.disabled = false;
-      ob.textContent = "查看原图";
-      toast("原图加载失败");
+      ob.textContent = T("viewOrig");
+      toast(T("origFailed"));
     }
   }
 
   function downloadOriginal(p) {
     const a = document.createElement("a");
     a.href = vault.url;
-    a.download = `${p.title || p.id}.jpg`;
+    a.download = `${F(p, "title") || p.id}.jpg`;
     a.click();
   }
 
@@ -293,9 +360,9 @@
   });
 
   function copy(text) {
-    const done = () => toast("链接已复制");
-    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => prompt("复制这个链接", text));
-    else prompt("复制这个链接", text);
+    const done = () => toast(T("copied"));
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => prompt(T("copyPrompt"), text));
+    else prompt(T("copyPrompt"), text);
   }
   let tt;
   function toast(msg) {
@@ -331,11 +398,11 @@
     }
     if (!lb.hidden) closeLightbox();
     renderChips();
-    const c = catByKey[state.cat];
-    document.title = c ? `${c.zh} · ${SITE.title}` : SITE.title;
+    setTitle();
   }
 
   window.addEventListener("hashchange", route);
+  renderStatic();
   render();
   route();
 })();

@@ -226,6 +226,8 @@ def default_title(stem):
     # 相机默认文件名（IMG_0740、DSC01118 等）不当作标题
     if stem.startswith(".") or re.match(r"^[0-9A-F]{8}-[0-9A-F]{4}-", stem, re.I):  # 隐藏文件、随机 ID 文件名
         return ""
+    if re.match(r"^[A-Z]{4}\d{4}$", stem) or stem.lower().startswith("fxn "):  # iPhone 编辑/导出、App 自动生成的文件名
+        return ""
     return "" if re.match(r"^(IMG|DSC|DSCF|_DSC|PXL|DJI|GOPR|P\d)[_-]?\d+", stem, re.I) else stem
 
 
@@ -283,6 +285,8 @@ def main():
             "title": cap.get("title", ""),
             "location": cap.get("location", ""),
             "desc": cap.get("desc", ""),
+            # 可选的英文版：在 captions.json 里加 "title_en" / "location_en" / "desc_en"
+            **{k: cap[k] for k in ("title_en", "location_en", "desc_en") if cap.get(k)},
             "date": date.isoformat(timespec="minutes"),
         })
 

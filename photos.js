@@ -7,7 +7,7 @@ window.PHOTOS = [
   "w": 1600,
   "h": 1600,
   "category": "Architecture",
-  "title": "BIRU1971",
+  "title": "",
   "location": "",
   "desc": "",
   "date": "2020-01-02T13:07"
@@ -343,7 +343,7 @@ window.PHOTOS = [
   "w": 1200,
   "h": 1600,
   "category": "Culture",
-  "title": "1E8CB25C-5331-47E2-972D-A032597ED552",
+  "title": "",
   "location": "",
   "desc": "",
   "date": "2023-09-25T20:02"
@@ -523,7 +523,7 @@ window.PHOTOS = [
   "w": 1600,
   "h": 1069,
   "category": "Culture",
-  "title": "IDQB6530",
+  "title": "",
   "location": "",
   "desc": "",
   "date": "2019-07-07T12:17"
@@ -667,7 +667,7 @@ window.PHOTOS = [
   "w": 1600,
   "h": 1069,
   "category": "Culture",
-  "title": "PRVI6962",
+  "title": "",
   "location": "",
   "desc": "",
   "date": "2019-07-07T12:32"
@@ -679,7 +679,7 @@ window.PHOTOS = [
   "w": 1600,
   "h": 1069,
   "category": "Culture",
-  "title": "UBZC3763",
+  "title": "",
   "location": "",
   "desc": "",
   "date": "2019-07-07T12:39"
@@ -691,7 +691,7 @@ window.PHOTOS = [
   "w": 1600,
   "h": 1200,
   "category": "Culture",
-  "title": "fxn 2024-08-02 204150.911",
+  "title": "",
   "location": "",
   "desc": "",
   "date": "2024-08-02T20:41"
@@ -895,7 +895,7 @@ window.PHOTOS = [
   "w": 1600,
   "h": 1070,
   "category": "InTheClouds",
-  "title": "TIMB0009",
+  "title": "",
   "location": "",
   "desc": "",
   "date": "2018-07-13T18:13"
@@ -907,7 +907,7 @@ window.PHOTOS = [
   "w": 1200,
   "h": 1600,
   "category": "InTheClouds",
-  "title": "fxn 2026-09-23 10251513873D10DC0B",
+  "title": "",
   "location": "",
   "desc": "",
   "date": "2026-09-23T10:25"
