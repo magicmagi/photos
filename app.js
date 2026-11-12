@@ -13,7 +13,7 @@
   const state = {
     cat: "all",
     sort: store.get("sort", "new"), // new | old
-    view: store.get("view", "timeline"), // timeline | grid
+    view: store.get("view2", "theme"), // theme（按主题，再按时间）| timeline（按年份）| grid（平铺）
     list: [],
     open: -1,
   };
@@ -22,7 +22,7 @@
   // 默认跟随访客的系统/浏览器语言：中文显示中文，其他语言显示英文；右上角按钮可手动切换
   const TEXT = {
     zh: {
-      all: "全部", newest: "最新优先", oldest: "最早优先", byYear: "按年份", flat: "平铺",
+      all: "全部", newest: "最新优先", oldest: "最早优先", byTheme: "按主题", byYear: "按年份", flat: "平铺",
       sortTip: "切换排序", viewTip: "切换视图", langTip: "Switch to English", langBtn: "EN",
       about: "关于", photos: (n) => `${n} 张照片`, count: (n) => `${n} 张`,
       empty: "这个分类还没有照片", unknownYear: "未知年份", photo: "照片", untitled: "未命名",
@@ -35,7 +35,7 @@
       copied: "链接已复制", copyPrompt: "复制这个链接", close: "关闭", prev: "上一张", next: "下一张",
     },
     en: {
-      all: "All", newest: "Newest first", oldest: "Oldest first", byYear: "By year", flat: "Grid",
+      all: "All", newest: "Newest first", oldest: "Oldest first", byTheme: "By theme", byYear: "By year", flat: "Grid",
       sortTip: "Change sort order", viewTip: "Change view", langTip: "切换到中文", langBtn: "中文",
       about: "About", photos: (n) => `${n} photos`, count: (n) => `${n}`,
       empty: "No photos in this category yet", unknownYear: "Undated", photo: "Photo", untitled: "Untitled",
@@ -113,7 +113,8 @@
   // ---------- controls ----------
   function renderControls() {
     $("sort-btn").innerHTML = state.sort === "new" ? `↓ <span class='lbl'>${T("newest")}</span>` : `↑ <span class='lbl'>${T("oldest")}</span>`;
-    $("view-btn").innerHTML = state.view === "timeline" ? `▤ <span class='lbl'>${T("byYear")}</span>` : `▦ <span class='lbl'>${T("flat")}</span>`;
+    const [icon, label] = { theme: ["▥", "byTheme"], timeline: ["▤", "byYear"], grid: ["▦", "flat"] }[state.view];
+    $("view-btn").innerHTML = `${icon} <span class='lbl'>${T(label)}</span>`;
   }
   $("sort-btn").onclick = () => {
     state.sort = state.sort === "new" ? "old" : "new";
@@ -121,8 +122,8 @@
     render();
   };
   $("view-btn").onclick = () => {
-    state.view = state.view === "timeline" ? "grid" : "timeline";
-    store.set("view", state.view);
+    state.view = { theme: "timeline", timeline: "grid", grid: "theme" }[state.view];
+    store.set("view2", state.view);
     render();
   };
   $("lang-btn").onclick = () => {
@@ -137,10 +138,11 @@
   // ---------- gallery ----------
   function tile(p, i) {
     const r = (p.w / p.h).toFixed(4);
-    const cap = [F(p, "location"), fmtDate(p.t)].filter(Boolean).join(" · ");
+    // 悬停时只显示标题和地点；日期只在点开照片后显示
+    const title = F(p, "title"), loc = F(p, "location");
     return `<figure class="tile" tabindex="0" data-i="${i}" style="flex-grow:${r};width:calc(var(--row) * ${r});aspect-ratio:${p.w}/${p.h}">
       <img src="${p.thumb || p.src}" alt="${esc(F(p, "title"))}" loading="lazy" onload="this.classList.add('loaded')">
-      <figcaption>${esc(F(p, "title"))}<small>${esc(cap)}</small></figcaption>
+      ${title || loc ? `<figcaption>${esc(title)}<small>${esc(loc)}</small></figcaption>` : ""}
     </figure>`;
   }
 
@@ -148,24 +150,31 @@
     renderChips();
     renderControls();
     const dir = state.sort === "new" ? -1 : 1;
-    state.list = PHOTOS.filter((p) => state.cat === "all" || p.category === state.cat).sort((a, b) => dir * (a.t - b.t));
+    if (!["theme", "timeline", "grid"].includes(state.view)) state.view = "theme";
+    // 按主题：先按 config.js 里的分类顺序，再按时间
+    const byTheme = state.view === "theme" && state.cat === "all";
+    const order = (p) => (byTheme ? CATS.findIndex((c) => c.key === p.category) : 0);
+    state.list = PHOTOS.filter((p) => state.cat === "all" || p.category === state.cat).sort(
+      (a, b) => order(a) - order(b) || dir * (a.t - b.t)
+    );
 
     const g = $("gallery");
     if (!state.list.length) {
       g.innerHTML = `<p class="empty">${T("empty")}</p>`;
       return;
     }
-    if (state.view === "grid") {
+    if (state.view === "grid" || (state.view === "theme" && !byTheme)) {
       g.innerHTML = `<div class="rows">${state.list.map(tile).join("")}</div>`;
     } else {
       const groups = [];
       state.list.forEach((p, i) => {
-        const y = p.t ? new Date(p.t).getFullYear() : T("unknownYear");
+        const c = catByKey[p.category];
+        const y = byTheme ? (c ? catName(c) : p.category) : p.t ? new Date(p.t).getFullYear() : T("unknownYear");
         if (!groups.length || groups.at(-1).y !== y) groups.push({ y, items: [] });
         groups.at(-1).items.push(tile(p, i));
       });
       g.innerHTML = groups
-        .map((gr) => `<div class="group-head"><h2>${gr.y}</h2><span>${T("count", gr.items.length)}</span></div><div class="rows">${gr.items.join("")}</div>`)
+        .map((gr) => `<div class="group-head"><h2>${esc(gr.y)}</h2><span>${T("count", gr.items.length)}</span></div><div class="rows">${gr.items.join("")}</div>`)
         .join("");
     }
     setTitle();
