@@ -14,8 +14,8 @@ Maggie T 的个人摄影作品集：旅途、城市、人文与云端的影像�
 |---|---|
 | [建筑](https://magicmagi.github.io/photos/#/Architecture) | 18 |
 | [自然](https://magicmagi.github.io/photos/#/Nature) | 8 |
-| [人文](https://magicmagi.github.io/photos/#/Culture) | 30 |
-| [云端](https://magicmagi.github.io/photos/#/InTheClouds) | 18 |
+| [人文](https://magicmagi.github.io/photos/#/Culture) | 28 |
+| [云端](https://magicmagi.github.io/photos/#/InTheClouds) | 17 |
 | [卡萨布兰卡 · 黑白](https://magicmagi.github.io/photos/#/Casablanca_BW) | 10 |
 
 拍摄时间跨度 2018 年至 2026 年。

@@ -14,8 +14,8 @@ A personal photography portfolio by Maggie T: photos from travels, cities, peopl
 |---|---|
 | [Architecture](https://magicmagi.github.io/photos/#/Architecture) | 18 |
 | [Nature](https://magicmagi.github.io/photos/#/Nature) | 8 |
-| [Culture](https://magicmagi.github.io/photos/#/Culture) | 30 |
-| [In the Clouds](https://magicmagi.github.io/photos/#/InTheClouds) | 18 |
+| [Culture](https://magicmagi.github.io/photos/#/Culture) | 28 |
+| [In the Clouds](https://magicmagi.github.io/photos/#/InTheClouds) | 17 |
 | [Casablanca B&W](https://magicmagi.github.io/photos/#/Casablanca_BW) | 10 |
 
 Taken between 2018 and 2026.

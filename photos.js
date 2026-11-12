@@ -637,30 +637,6 @@ window.PHOTOS = [
   "date": "2025-08-28T18:39"
  },
  {
-  "id": "cb0ad591",
-  "src": "img/cb0ad591.jpg",
-  "thumb": "img/cb0ad591_t.jpg",
-  "w": 1200,
-  "h": 1600,
-  "category": "Culture",
-  "title": "",
-  "location": "",
-  "desc": "",
-  "date": "2025-08-30T14:37"
- },
- {
-  "id": "df7e6966",
-  "src": "img/df7e6966.jpg",
-  "thumb": "img/df7e6966_t.jpg",
-  "w": 1200,
-  "h": 1600,
-  "category": "Culture",
-  "title": "",
-  "location": "",
-  "desc": "",
-  "date": "2025-08-30T16:43"
- },
- {
   "id": "f4358084",
   "src": "img/f4358084.jpg",
   "thumb": "img/f4358084_t.jpg",
@@ -803,18 +779,6 @@ window.PHOTOS = [
   "location": "",
   "desc": "",
   "date": "2019-08-18T18:48"
- },
- {
-  "id": "0ada1fb6",
-  "src": "img/0ada1fb6.jpg",
-  "thumb": "img/0ada1fb6_t.jpg",
-  "w": 1600,
-  "h": 1068,
-  "category": "InTheClouds",
-  "title": "",
-  "location": "",
-  "desc": "",
-  "date": "2025-03-31T09:14"
  },
  {
   "id": "cc09d3d4",
